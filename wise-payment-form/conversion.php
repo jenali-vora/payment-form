@@ -3,42 +3,42 @@ header("Content-Type: application/json");
 
 if (isset($_POST['amount']) && isset($_POST['from_currency']) && isset($_POST['to_currency'])) {
     $amount = $_POST['amount'];
-    $from = $_POST['from_currency'];
-    $to = $_POST['to_currency'];
+    $from = strtoupper(trim($_POST['from_currency']));
+    $to = strtoupper(trim($_POST['to_currency']));
 
-    $apiKey = 'y4yf2TU9Kk95C9WziwAhhLUz4j38IfPv'; // Your API Key
-    $apiUrl = "https://api.apilayer.com/exchangerates_data/latest?base=EUR&symbols=$from,$to";
+    $apiKey = "y4yf2TU9Kk95C9WziwAhhLUz4j38IfPv"; // ✅ Apni API Key Yaha Lagaye
+    $apiUrl = "https://api.apilayer.com/exchangerates_data/latest?base=$from";
 
-    $headers = [
+    $headers = array(
         "apikey: $apiKey"
-    ];
+    );
 
-    $context = stream_context_create([
-        "http" => [
+    $context = stream_context_create(array(
+        "http" => array(
             "header" => implode("\r\n", $headers)
-        ]
-    ]);
+        )
+    ));
 
     $response = file_get_contents($apiUrl, false, $context);
     $data = json_decode($response, true);
 
-    if (isset($data['rates'][$from]) && isset($data['rates'][$to])) {
-        $from_rate = $data['rates'][$from];
-        $to_rate = $data['rates'][$to];
+    if (isset($data['rates'][$to])) {
+        $rate = $data['rates'][$to];
 
-        $converted_amount = ($amount / $from_rate) * $to_rate; // Dynamic Conversion
-        $our_fee = round($converted_amount * 0.02, 2); // 2% Fee
-        $gst_fee = round($our_fee * 0.18, 2); // 18% GST
-        $total_fees = $our_fee + $gst_fee; // Total Fees
+        $converted_amount = round($amount * $rate, 2);
+        $bank_transfer_fee = 0; // 0% Bank Transfer Fee
+        $our_fee = round($converted_amount * 0.03, 2); // 3% Our Fee
         $savings_amount = round($converted_amount * 0.05, 2); // 5% Savings
+        $final_amount = $converted_amount - $our_fee;
 
         $response = array(
             'success' => true,
-            'converted_amount' => round($converted_amount, 2),
+            'rate' => $rate,
+            'converted_amount' => $converted_amount,
+            'bank_transfer_fee' => $bank_transfer_fee,
             'our_fee' => $our_fee,
-            'gst_fee' => $gst_fee,
-            'total_fees' => $total_fees,
-            'savings_amount' => $savings_amount
+            'savings_amount' => $savings_amount,
+            'final_amount' => $final_amount
         );
 
         echo json_encode($response);
