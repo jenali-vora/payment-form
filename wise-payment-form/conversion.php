@@ -6,7 +6,7 @@ if (isset($_POST['amount']) && isset($_POST['from_currency']) && isset($_POST['t
     $from = strtoupper(trim($_POST['from_currency']));
     $to = strtoupper(trim($_POST['to_currency']));
 
-    $apiKey = "y4yf2TU9Kk95C9WziwAhhLUz4j38IfPv"; // ✅ Apni API Key Yaha Lagaye
+    $apiKey = "y4yf2TU9Kk95C9WziwAhhLUz4j38IfPv"; //
     $apiUrl = "https://api.apilayer.com/exchangerates_data/latest?base=$from";
 
     $headers = array(
