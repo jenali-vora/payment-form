@@ -2,46 +2,43 @@
 header("Content-Type: application/json");
 
 if (isset($_POST['amount']) && isset($_POST['from_currency']) && isset($_POST['to_currency'])) {
-    $amount = $_POST['amount'];
+    $amount = floatval($_POST['amount']);
     $from = strtoupper(trim($_POST['from_currency']));
     $to = strtoupper(trim($_POST['to_currency']));
 
-    $apiKey = "y4yf2TU9Kk95C9WziwAhhLUz4j38IfPv"; //
-    $apiUrl = "https://api.apilayer.com/exchangerates_data/latest?base=$from";
+    $apiUrl = "https://wise.com/gateway/v1/rates?source=$from&target=$to";
 
-    $headers = array(
-        "apikey: $apiKey"
-    );
-
-    $context = stream_context_create(array(
-        "http" => array(
-            "header" => implode("\r\n", $headers)
-        )
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $apiUrl);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+        "User-Agent: Mozilla/5.0",
+        "Accept: application/json"
     ));
 
-    $response = file_get_contents($apiUrl, false, $context);
+    $response = curl_exec($ch);
+    curl_close($ch);
+
     $data = json_decode($response, true);
 
-    if (isset($data['rates'][$to])) {
-        $rate = $data['rates'][$to];
-
+    if (isset($data['rate'])) {
+        $rate = $data['rate'];
         $converted_amount = round($amount * $rate, 2);
-        $bank_transfer_fee = 0; // 0% Bank Transfer Fee
-        $our_fee = round($converted_amount * 0.03, 2); // 3% Our Fee
-        $savings_amount = round($converted_amount * 0.05, 2); // 5% Savings
+        $bank_transfer_fee = 0;
+        $our_fee = round($converted_amount * 0.03, 2);
+        $savings_amount = round($converted_amount * 0.05, 2);
         $final_amount = $converted_amount - $our_fee;
 
-        $response = array(
+        echo json_encode(array(
             'success' => true,
-            'rate' => $rate,
+            'rate' => round($rate, 6),
             'converted_amount' => $converted_amount,
             'bank_transfer_fee' => $bank_transfer_fee,
             'our_fee' => $our_fee,
             'savings_amount' => $savings_amount,
             'final_amount' => $final_amount
-        );
-
-        echo json_encode($response);
+        ));
     } else {
         echo json_encode(array(
             'success' => false,
@@ -54,6 +51,4 @@ if (isset($_POST['amount']) && isset($_POST['from_currency']) && isset($_POST['t
         'message' => 'Invalid Input'
     ));
 }
-
-wp_die();
 ?>

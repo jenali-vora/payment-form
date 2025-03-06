@@ -4,8 +4,7 @@ jQuery(document).ready(function ($) {
         var toCurrency = $('#receive_currency').val();
         var amount = $('#you_send').val();
 
-        if (fromCurrency === '' || toCurrency === '' || amount === '' || isNaN(amount)) {
-            console.log("Invalid input");
+        if (amount === '' || isNaN(amount) || parseFloat(amount) <= 0) {
             return;
         }
 
@@ -30,16 +29,15 @@ jQuery(document).ready(function ($) {
                     alert(response.message);
                 }
             },
-            error: function (xhr) {
-                console.error("AJAX Error:", xhr.responseText);
-                alert("AJAX Error");
+            error: function () {
+                alert("Invalid Currency Conversion");
             }
         });
     }
 
+    // setInterval(updateConversion, 30000);
+    updateConversion();
     $('#you_send, #send_currency, #receive_currency').on('change keyup', function () {
         updateConversion();
     });
-
-    updateConversion();
 });
